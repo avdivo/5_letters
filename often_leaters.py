@@ -1,7 +1,7 @@
 # Читаем файл со всеми русскими словами формируем список букв отсортированный по частоте использования в словах
 import sys, os
 
-input_file = os.path.join(sys.path[0], 'five_letters_words.txt')  # Файл ввода
+input_file = os.path.join(sys.path[0], 'all_words.txt')  # Файл ввода
 
 with open(input_file, 'r', encoding='utf-8') as f:
     all_words = f.readlines()
@@ -16,13 +16,10 @@ for word in all_words:
     for letter in word:
         if letter in letters:
             letters[letter] += 1
-print(letters)
-alphabet = [x for x in sorted(letters.keys(), key=lambda i: letters[i], reverse=True)]
 
-print(alphabet)
+print(''.join([x for x in sorted(letters.keys(), key=lambda i: letters[i], reverse=True)]))
 
-# Для всех слов
-# ['и', 'о', 'а', 'е', 'н', 'р', 'т', 'к', 'с', 'л', 'в', 'п', 'ы', 'м', 'д', 'у', 'я', 'з', 'б', 'г', 'ь', 'ч', 'ц', 'ш', 'ф', 'ж', 'х', 'щ', 'й', 'ю', 'э', 'ъ', 'ё']
 
-# Для слов из 5 букв
-# ['а', 'и', 'о', 'к', 'р', 'е', 'ы', 'т', 'л', 'с', 'н', 'у', 'п', 'м', 'б', 'д', 'в', 'г', 'з', 'ш', 'я', 'ч', 'х', 'ф', 'ь', 'ж', 'ц', 'й', 'ю', 'э', 'щ', 'ъ', 'ё']
+# Для всех слов:     иоаенрткслвпымдуязбгьчцшфжхщйюэъё
+
+# Для слов из 5 букв:    аиокреытлснупмбдвгзшячхфьжцйюэщъё
