@@ -1,10 +1,9 @@
 import re
 import sys, os
 
-
 # ---------------------- Фильтры --------------------------------
 # Запретить слова в которых буква встречается больше 1 раза
-ban = False # False
+ban = False  # False
 
 # Черный список букв
 black_list = ''
@@ -20,24 +19,28 @@ filter = {
     '': '.....',
     '': '.....'
 }
-# ---------------------------------------------------------------
 
+
+# ---------------------------------------------------------------
 
 
 def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
     ''' Фильтр слов. Принимает:
-    Словарь (set), список букв которые должны отсутствовать в выбранных словах (str),
-    фильтр (dict) - key - буква, value - 5 символов ( '.' - любая буква, '+' - в этой
-    позиции буква key, '-' - в этой позиции нет буквы key),
-    разрешать ли слова с повторяющейся буквой'''
+    1 (set): список слов среди которых ведется поиск,
+    2 (set): список букв которые должны отсутствовать в выбранных словах (str),
+    3 (dict): key - буква, value - 5 символов ( '.' - любая буква, '+' - в этой
+        позиции буква key, '-' - в этой позиции нет буквы key),
+    4 (bool): разрешать ли слова с повторяющейся буквой'''
 
     # Подготовка фильтров
     # список писков по количеству букв в слове, каждый соответствует позиции буквы
     # в списках перечислены буквы которые не могут находиться на этой позиции в слове
-    position_not_for_letter = [[] for _ in range (5)]
-    pattern = ['.' for _ in range (5)]  # На каждой позиции буква которая должна на ней быть
+    position_not_for_letter = [[] for _ in range(5)]
+    pattern = ['.' for _ in range(5)]  # На каждой позиции буква которая должна на ней быть
+    white_list_letter = []  # Объязательные буквы в слове
     for letter, positions in filter.items():
         if letter:
+            white_list_letter.append(letter)
             for i in range(5):
                 if positions[i] == '+':
                     pattern[i] = letter
@@ -52,6 +55,14 @@ def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
         # Исключаем слова, в которых есть буквы из черного списка
         word = word.rstrip()
         if set(word) - black_list != set(word):
+            continue
+
+        # Исключаем слова, в которых нет объязательных буквы
+        block = False
+        for letter in white_list_letter:
+            if letter not in word:
+                block = True
+        if block:
             continue
 
         # Исключаем слова, в которых нет нужных букв в нужных позициях
@@ -70,7 +81,7 @@ def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
         if ban and re.findall(r'(\w).*\1+', word):
             continue
 
-        out_words.append(word) # Слово прошло все фильтры и будет выведено
+        out_words.append(word)  # Слово прошло все фильтры и будет выведено
 
     return set(out_words)
 
@@ -93,7 +104,7 @@ alphabet = 'аиокреытлснупмбдвгзшячхфьжцйюэщъё'
 # после вывода каждого блока делаем пробел, а выведенные слова изымаем из общего списка, чтоб избежать повторения.
 
 print()
-summ = 0 # Всего слов
+summ = 0  # Всего слов
 new_black_list = alphabet
 for letter in alphabet:
     if letter in black_list:
@@ -101,16 +112,16 @@ for letter in alphabet:
         continue
     new_black_list = new_black_list.replace(letter, '')
 
-    out_words = filter_words(all_words, new_black_list, filter, ban) # Фильтруем слова
+    out_words = filter_words(all_words, new_black_list, filter, ban)  # Фильтруем слова
     out_words_len = len(out_words)
-    summ += out_words_len # Всего слов выводится
-    all_words = all_words - out_words # Удаляем из словаря выведенные слова
+    summ += out_words_len  # Всего слов выводится
+    all_words = all_words - out_words  # Удаляем из словаря выведенные слова
     out_words = sorted(list(out_words))
 
-    # Выводим слов на экран столбцами
+    # Вывод слов на экран столбцами
     if out_words:
         for i in range(out_words_len // 10 + int(out_words_len % 10 > 0)):
-            print(*out_words[i*10:i*10+10])
+            print(*out_words[i * 10:i * 10 + 10])
         print(f'\n{out_words_len} слов\n')
 
 print(f'{summ} слов всего')
