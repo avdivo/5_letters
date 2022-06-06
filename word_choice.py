@@ -24,82 +24,55 @@ filter = {
 
 
 
-# Функция фильтрации слов
-def filter_words(all_words, black_list, filter, ban):
-    # Убираем слова, в которых есть буквы из черного списка
-    black_list = set(black_list)
-    words = []
-    for word in all_words:
-        word = word.rstrip()
-        set_word = set(word)
-
-        if set_word - black_list == set_word:
-            words.append(word)
-
+def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
+    ''' Фильтр слов. Принимает:
+    Словарь (set), список букв которые должны отсутствовать в выбранных словах (str),
+    фильтр (dict) - key - буква, value - 5 символов ( '.' - любая буква, '+' - в этой
+    позиции буква key, '-' - в этой позиции нет буквы key),
+    разрешать ли слова с повторяющейся буквой'''
 
     # Подготовка фильтров
-    letter_in_place = '.....'  # Буквы стоящие на своем месте
-    letter_in_word = dict()  # Буквы есть в слове
-    for letter, word in filter.items():
-        if '+' in word:
-            # Буквы стоящие на своем месте
-            pos = word.index('+')
-            letter_in_place = letter_in_place[:pos] + letter + letter_in_place[pos+1:]
-        elif '-' in word:
-            # Буквы есть в слове, но позиция неизвестна, известно только где буква не находится
-            # Копируем в этот словарь элементы которые не относятся к Буквы стоящие на своем месте
-            letter_in_word[letter] = word
-    letter_in_place = re.compile(letter_in_place)  # Компилируем из строки объект регулярное выражение
+    # список писков по количеству букв в слове, каждый соответствует позиции буквы
+    # в списках перечислены буквы которые не могут находиться на этой позиции в слове
+    position_not_for_letter = [[] for _ in range (5)]
+    pattern = ['.' for _ in range (5)]  # На каждой позиции буква которая должна на ней быть
+    for letter, positions in filter.items():
+        if letter:
+            for i in range(5):
+                if positions[i] == '+':
+                    pattern[i] = letter
+                elif positions[i] == '-':
+                    position_not_for_letter[i].append(letter)
+    pattern = re.compile(''.join(pattern))
+    black_list = set(black_list)
+    out_words = []
 
+    for word in all_words:
 
+        # Исключаем слова, в которых есть буквы из черного списка
+        word = word.rstrip()
+        if set(word) - black_list != set(word):
+            continue
 
-    # Применяем фильтры и выводим прошедшие слова
-    out_words = [] # Выведенные слова
-    words_count = 0
-    for word in words:
-        check_ok = False
-        if letter_in_place.fullmatch(word):
-            if letter_in_word:
-                # Если фильтр не задан, сюда попадут все слова
-                for letter, sample in letter_in_word.items():
-                    # Проходим по словарю с буквами, чье положение неизвестно
-                    check = '' # Буквы которые надо проверить, если в них есть искомая, то слово проходит
-                    for i, w in enumerate(word):
-                        if sample[i] == '.':
-                            # На этом месте может быть эта буква
-                            check += w
-                        else:
-                            # На этом месте не может быть эта буква
-                            if w == letter:
-                                # но если она тут есть, бракуем слово сразу
-                                check = ''
-                                break
-                    if letter in check:
-                        # Буква есть в  месте где она может быть, слово принято
-                        check_ok = True
-                    else:
-                        check_ok = False
-                        break  # Если слово не прошло по одному из фильтров то оно не прошло вообще
+        # Исключаем слова, в которых нет нужных букв в нужных позициях
+        if not re.findall(pattern, word):
+            continue
 
-            else:
-                # Фильтров нет, пропускаем слово
-                check_ok = True
+        # Исключаем слова, в которых есть буквы, стоящие не на своих позициях
+        block = False
+        for i, letter in enumerate(word):
+            if letter in position_not_for_letter[i]:
+                block = True
+        if block:
+            continue
 
-        if check_ok:
-            # Фильтр пропустил слово
-            if ban and re.findall(r'(\w).*\1+', word):
-                # В слове запрещены одинаковые буквы, а они есть
-                pass
-            else:
-                print(word)
-                words_count += 1
-                out_words.append(word)
+        # Исключаем слова, с дублированием букв
+        if ban and re.findall(r'(\w).*\1+', word):
+            continue
 
-    print(f'\n {words_count} слова \n\n')
+        out_words.append(word) # Слово прошло все фильтры и будет выведено
+
     return set(out_words)
-
-
-
 
 
 # Чтение слов
@@ -119,11 +92,25 @@ alphabet = 'аиокреытлснупмбдвгзшячхфьжцйюэщъё'
 # буквы, которые находятся в черном списке, определенном пользователем, добавляться не будут, таким образом реализуя фильтр.
 # после вывода каждого блока делаем пробел, а выведенные слова изымаем из общего списка, чтоб избежать повторения.
 
+print()
+summ = 0 # Всего слов
 new_black_list = alphabet
 for letter in alphabet:
     if letter in black_list:
         # Не включаем в слова буквы, которые запрещены пользователем
         continue
     new_black_list = new_black_list.replace(letter, '')
-    all_words = all_words - filter_words(all_words, new_black_list, filter, ban) # Удаляем выведенные слова из общего списка
 
+    out_words = filter_words(all_words, new_black_list, filter, ban) # Фильтруем слова
+    out_words_len = len(out_words)
+    summ += out_words_len # Всего слов выводится
+    all_words = all_words - out_words # Удаляем из словаря выведенные слова
+    out_words = sorted(list(out_words))
+
+    # Выводим слов на экран столбцами
+    if out_words:
+        for i in range(out_words_len // 10 + int(out_words_len % 10 > 0)):
+            print(*out_words[i*10:i*10+10])
+        print(f'\n{out_words_len} слов\n')
+
+print(f'{summ} слов всего')
