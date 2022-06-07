@@ -1,13 +1,12 @@
 import re
 import sys, os
 
-
 # ---------------------- Фильтры --------------------------------
 # Запретить слова в которых буква встречается больше 1 раза
 ban = False  # False
 
 # Черный список букв
-black_list = 'а'
+black_list = ''
 
 # Буквы, которые есть в слове
 # Первый элемент (ключ) - это буква, которая есть в слове
@@ -20,8 +19,9 @@ filter = {
     '': '.....',
     '': '.....'
 }
-# ---------------------------------------------------------------
 
+
+# ---------------------------------------------------------------
 
 
 def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
@@ -34,8 +34,8 @@ def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
     # Подготовка фильтров
     # список писков по количеству букв в слове, каждый соответствует позиции буквы
     # в списках перечислены буквы которые не могут находиться на этой позиции в слове
-    position_not_for_letter = [[] for _ in range (5)]
-    pattern = ['.' for _ in range (5)]  # На каждой позиции буква которая должна на ней быть
+    position_not_for_letter = [[] for _ in range(5)]
+    pattern = ['.' for _ in range(5)]  # На каждой позиции буква которая должна на ней быть
     for letter, positions in filter.items():
         if letter:
             for i in range(5):
@@ -70,20 +70,20 @@ def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
         if ban and re.findall(r'(\w).*\1+', word):
             continue
 
-        out_words.append(word) # Слово прошло все фильтры и будет выведено
+        out_words.append(word)  # Слово прошло все фильтры и будет выведено
 
     return set(out_words)
 
 
 # Чтение слов
-input_file = os.path.join(sys.path[0], 'five_letters_words.txt')  # Файл ввода
+input_file = os.path.join(sys.path[0], 'five_letters_singular.txt')  # Файл ввода
 
 with open(input_file, 'r', encoding='utf-8') as f:
     all_words = f.readlines()
 all_words = set(map(lambda x: x.rstrip(), all_words))  # Убираем дубликаты слов и перевод строки из них
 
 # Алфавит отсортированный в порядке частотности букв в словах
-alphabet = 'аиокреытлснупмбдвгзшячхфьжцйюэщъё'
+alphabet = 'аокеритлнсупмбвдзгяышьцчхйфжюэщъё'
 
 # Слова будем выводить не всем списком, несколькими блоками, в порядке популярности букв встречающихся в них
 # т.е. сначала будут идти слова которые состоят из самых часто встречаемых букв
@@ -93,7 +93,7 @@ alphabet = 'аиокреытлснупмбдвгзшячхфьжцйюэщъё'
 # после вывода каждого блока делаем пробел, а выведенные слова изымаем из общего списка, чтоб избежать повторения.
 
 print()
-summ = 0 # Всего слов
+summ = 0  # Всего слов
 new_black_list = alphabet
 for letter in alphabet:
     if letter in black_list:
@@ -101,16 +101,17 @@ for letter in alphabet:
         continue
     new_black_list = new_black_list.replace(letter, '')
 
-    out_words = filter_words(all_words, new_black_list, filter, ban) # Фильтруем слова
+    out_words = filter_words(all_words, new_black_list, filter, ban)  # Фильтруем слова
     out_words_len = len(out_words)
-    summ += out_words_len # Всего слов выводится
-    all_words = all_words - out_words # Удаляем из словаря выведенные слова
+    summ += out_words_len  # Всего слов выводится
+    all_words = all_words - out_words  # Удаляем из словаря выведенные слова
     out_words = sorted(list(out_words))
 
     # Выводим слов на экран столбцами
+    columns = 20
     if out_words:
-        for i in range(out_words_len // 10 + int(out_words_len % 10 > 0)):
-            print(*out_words[i*10:i*10+10])
+        for i in range(out_words_len // columns + int(out_words_len % columns > 0)):
+            print(*out_words[i * columns:i * columns + columns])
         print(f'\n{out_words_len} слов\n')
 
 print(f'{summ} слов всего')

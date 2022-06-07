@@ -2,8 +2,8 @@
 import sys, os
 
 
-input_file = os.path.join(sys.path[0], 'all_words.txt')  # Файл ввода
-output_file = os.path.join(sys.path[0], 'five_letters_words.txt')  # Файл вывода
+input_file = os.path.join(sys.path[0], 'singular.txt')  # Файл ввода
+output_file = os.path.join(sys.path[0], 'five_letters_singular.txt')  # Файл вывода
 
 with open(input_file, 'r', encoding='utf-8') as f:
     all_words = f.readlines()

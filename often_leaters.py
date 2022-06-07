@@ -1,7 +1,7 @@
 # Читаем файл со всеми русскими словами формируем список букв отсортированный по частоте использования в словах
 import sys, os
 
-input_file = os.path.join(sys.path[0], 'all_words.txt')  # Файл ввода
+input_file = os.path.join(sys.path[0], 'five_letters_singular.txt')  # Файл ввода
 
 with open(input_file, 'r', encoding='utf-8') as f:
     all_words = f.readlines()
