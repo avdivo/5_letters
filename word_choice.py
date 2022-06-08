@@ -36,8 +36,10 @@ def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
     # в списках перечислены буквы которые не могут находиться на этой позиции в слове
     position_not_for_letter = [[] for _ in range(5)]
     pattern = ['.' for _ in range(5)]  # На каждой позиции буква которая должна на ней быть
+    white_list_letter = []  # Объязательные буквы в слове
     for letter, positions in filter.items():
         if letter:
+            white_list_letter.append(letter)
             for i in range(5):
                 if positions[i] == '+':
                     pattern[i] = letter
@@ -56,6 +58,14 @@ def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
 
         # Исключаем слова, в которых нет нужных букв в нужных позициях
         if not re.findall(pattern, word):
+            continue
+
+        # Исключаем слова, в которых нет объязательных буквы
+        block = False
+        for letter in white_list_letter:
+            if letter not in word:
+                block = True
+        if block:
             continue
 
         # Исключаем слова, в которых есть буквы, стоящие не на своих позициях
