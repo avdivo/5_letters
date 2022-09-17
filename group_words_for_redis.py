@@ -34,3 +34,4 @@ for pos in range(5):
 # Перечисление групп и их размеров
 for i in group:
     print(*i)
+
