@@ -1,5 +1,7 @@
 import re
 import sys, os
+from redisworks import Root
+from redis import Redis
 import time
 
 # ---------------------- Фильтры --------------------------------
@@ -89,13 +91,23 @@ def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
 start_time = time.time()
 # ------------------- Время выполнения ----------------------
 
+
+# ------------------------- Удаляем -------------------------
 # Чтение слов
-input_file = os.path.join(sys.path[0], 'five_letters_singular.txt')  # Файл ввода
+# input_file = os.path.join(sys.path[0], 'five_letters_singular.txt')  # Файл ввода
+#
+# with open(input_file, 'r', encoding='utf-8') as f:
+#     all_words = f.readlines()
+# all_words = set(map(lambda x: x.rstrip(), all_words))  # Убираем дубликаты слов и перевод строки из них
+# ------------------------- Удаляем -------------------------
 
-with open(input_file, 'r', encoding='utf-8') as f:
-    all_words = f.readlines()
-all_words = set(map(lambda x: x.rstrip(), all_words))  # Убираем дубликаты слов и перевод строки из них
-
+# root = Root()
+# root = Root(host='localhost', port=6379, db=0)
+r = Redis(host='localhost', port=6379, db=0)
+all_words = r.get('root.all')
+print(all_words)
+print(f"{(time.time() - start_time)*1000} миллисекунд")
+exit()
 # Алфавит отсортированный в порядке частотности букв в словах
 alphabet = 'аокеритлнсупмбвдзгяышьцчхйфжюэщъё'
 
