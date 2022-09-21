@@ -1,4 +1,5 @@
 # Создание групп слов с различными свойствами для Redis
+# С использованием redisworks
 
 import re
 import sys, os

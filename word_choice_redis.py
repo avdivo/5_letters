@@ -1,7 +1,6 @@
 import re
 import sys, os
-from redisworks import Root
-from redis import Redis
+import redis
 import time
 
 # ---------------------- Фильтры --------------------------------
@@ -101,11 +100,9 @@ start_time = time.time()
 # all_words = set(map(lambda x: x.rstrip(), all_words))  # Убираем дубликаты слов и перевод строки из них
 # ------------------------- Удаляем -------------------------
 
-# root = Root()
-# root = Root(host='localhost', port=6379, db=0)
-r = Redis(host='localhost', port=6379, db=0)
-all_words = r.get('root.all')
-print(all_words)
+r = redis.Redis(host='localhost', port=6379, db=0)
+all_words = set(map(lambda x: x.decode('utf-8'), r.smembers('all')))
+# print(all_words)
 print(f"{(time.time() - start_time)*1000} миллисекунд")
 exit()
 # Алфавит отсортированный в порядке частотности букв в словах
