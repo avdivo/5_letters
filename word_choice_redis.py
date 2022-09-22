@@ -1,5 +1,4 @@
 import re
-import sys, os
 import redis
 import time
 
@@ -24,6 +23,44 @@ filter = {
 
 
 # ---------------------------------------------------------------
+# ------------------- Время выполнения ----------------------
+start_time = time.time()
+# ------------------- Время выполнения ----------------------
+
+r = redis.Redis(host='localhost', port=6379, db=0)
+
+# Запрашиваем в Redis слова, в которых нет букв из черного списка
+# Слова записаны в группы 'no_x' где x отсутствующая буква
+if black_list:
+    list_group_name = [f'no_{letter}' for letter in black_list]
+    all_words = set(map(lambda x: x.decode('utf-8'), r.sinter(*list_group_name)))
+else:
+    all_words = set(map(lambda x: x.decode('utf-8'), r.smembers('all')))
+
+# Слова для вывода разбиваем по группам.
+# Группы формируются по принципу частотности использования групп в 5-буквенных словах
+# Для этого определяем для каждого слова, какая его буква стоит ниже всех в списке частотности букв
+# По индексу этой буквы назначаем номер группы для вывода
+
+# Алфавит отсортированный в порядке частотности букв в словах
+alphabet = 'аокеритлнсупмбвдзгяышьцчхйфжюэщъё-'
+
+number_group = dict()
+for word in all_words:
+    number = max([alphabet.index(letter) for letter in word])
+    try:
+        number_group[number] += [word]
+    except:
+        number_group[number] = [word]
+for i, group in number_group.items():
+    print(f'Группа {i} - {len(group)} слов:\n{sorted(group)}\n')
+
+
+
+# ------------------- Время выполнения ----------------------
+print(f"{(time.time() - start_time)*1000} миллисекунд")
+# ------------------- Время выполнения ----------------------
+exit()
 
 
 def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
@@ -51,40 +88,39 @@ def filter_words(all_words: set, black_list: str, filter: dict, ban: bool):
     black_list = set(black_list)
     out_words = []
 
-    for word in all_words:
+    # Запрашиваем в Redis слова, в которых нет букв из черного списка
+    # Слова записаны в группы 'no_x' где x отсутствующая буква
+    if black_list:
+        list_group_name = [f'no_{letter}' for letter in black_list]
+        all_words = set(map(lambda x: x.decode('utf-8'), r.sinter(*list_group_name)))
 
-        # Исключаем слова, в которых есть буквы из черного списка
-        word = word.rstrip()
-        if set(word) - black_list != set(word):
-            continue
+    # Исключаем слова, в которых нет нужных букв в нужных позициях
+    # if not re.findall(pattern, word):
+    #     continue
 
-        # Исключаем слова, в которых нет нужных букв в нужных позициях
-        if not re.findall(pattern, word):
-            continue
+    # Исключаем слова, в которых нет объязательных буквы
+    # block = False
+    # for letter in white_list_letter:
+    #     if letter not in word:
+    #         block = True
+    # if block:
+    #     continue
 
-        # Исключаем слова, в которых нет объязательных буквы
-        block = False
-        for letter in white_list_letter:
-            if letter not in word:
-                block = True
-        if block:
-            continue
+    # Исключаем слова, в которых есть буквы, стоящие не на своих позициях
+    # block = False
+    # for i, letter in enumerate(word):
+    #     if letter in position_not_for_letter[i]:
+    #         block = True
+    # if block:
+    #     continue
 
-        # Исключаем слова, в которых есть буквы, стоящие не на своих позициях
-        block = False
-        for i, letter in enumerate(word):
-            if letter in position_not_for_letter[i]:
-                block = True
-        if block:
-            continue
+    # Исключаем слова, с дублированием букв
+    # if ban and re.findall(r'(\w).*\1+', word):
+    #     continue
 
-        # Исключаем слова, с дублированием букв
-        if ban and re.findall(r'(\w).*\1+', word):
-            continue
+    # out_words.append(word)  # Слово прошло все фильтры и будет выведено
 
-        out_words.append(word)  # Слово прошло все фильтры и будет выведено
-
-    return set(out_words)
+    return all_words
 
 # ------------------- Время выполнения ----------------------
 start_time = time.time()
@@ -102,9 +138,14 @@ start_time = time.time()
 
 r = redis.Redis(host='localhost', port=6379, db=0)
 all_words = set(map(lambda x: x.decode('utf-8'), r.smembers('all')))
-# print(all_words)
+
+# new = r.sunion('а.....', '.а...', '..а..', '...а.', '....а')
+# print(len(new))
+# print(new)
+
+
 print(f"{(time.time() - start_time)*1000} миллисекунд")
-exit()
+# exit()
 # Алфавит отсортированный в порядке частотности букв в словах
 alphabet = 'аокеритлнсупмбвдзгяышьцчхйфжюэщъё'
 

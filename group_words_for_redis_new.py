@@ -41,3 +41,18 @@ for pos in range(5):
             r.sadd(group_name, *group)
             print(set(map(lambda x: x.decode('utf-8'), r.smembers(group_name))))
 
+# Создание групп слов в которых отсутствует одна из букв алфавита
+# Создаем ключи для Redis указывающие на список слов в которых
+# нет одной из букв. Пример ключа: no_а
+# Перебираются все буквы алфавита
+group = set()
+for letter in alphabet:
+    group_name = 'no_' + letter
+    group.clear()
+    for word in all_words:
+        # Готовим можество слов, в которых нет заданной буквы
+        if letter not in word:
+            group.add(word)
+    if group:
+        r.sadd(group_name, *group)
+        print(len(group), group_name, set(map(lambda x: x.decode('utf-8'), r.smembers(group_name))))
