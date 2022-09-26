@@ -7,14 +7,14 @@ import time
 ban = False  # False - разрешено
 
 # Черный список букв
-black_list = ''
+black_list = 'ко'
 
 # Буквы, которые есть в слове
 # Если словарь или значение его элемента пустые, значит еще нет букв которые точно есть в слове.
 # Если буквы есть, соварь будет содержать описание известных позиций в слове, позиции обозначаются ключами 0 - 4:
 # Буква в верхнем регистре строки значения обозначает что в этой позиции точно стоит эта буква.
 # В нижнем регистре буквы обозначают что в этой позиции этаи буквы не стоит (но она есть в слове в дргой позиции)
-existing_letters = {0: '', 1: '', 2: '', 3: '', 4: ''}  # dict()
+existing_letters = {0: '', 1: 'а', 2: '', 3: '', 4: ''}  # dict()
 
 # ---------------------------------------------------------------
 # ------------------- Время выполнения ----------------------
@@ -51,27 +51,42 @@ else:
 # 1. Для нахождения слов с известными буквами в известных позициях (приходят как заглавные)
 #    включаем соответствующую группу в список, и находим пересечение (средствами Redis)
 #    всех списков. Запоминаем полученное множество в Python.
-# 2. Для случаев когда известно, что буква есть в слове, известна позиция
-#    где эта буква не стоит. Включаем в список те группы, где буквы (приходят в нижнем регистре)
-#    не стоят для всех букв и всех позиций. Находим разность этих словарей от словаря (всех слов)
-#    пришедщего в фильтр.
+# 2. Для случаев когда известно, что буква есть в слове и позиция
+#    где эта буква не стоит. Получаем множества (суммируем) где бука есть на всех дпугих
+#    местах кроме запрещенного запоминаем это множкство в python для первй буквы.
+#    Для остальных букв находим пересечение с запомненным множеством и сохраняем туда же.
 # 3. Находим пересечение множеств после п.1 и п.2
 if existing_letters:
     exist_in_position = set()
     exist_out_of_position = set()
+    exist_out_of_position_inverse = set()
     for pos, val in existing_letters.items():
         if val:
             if val.islower():
                 for letter in val:
-                    # Добавляем имена групп с данной буквой в позиии где они не должны стоять
-                    exist_out_of_position.add('.....'[:pos] + letter[0].lower() + '.' * (4 - pos))
+                    # Добавляем имена групп с данной буквой, кроме того, где она стоит в рассматриваемой
+                    # позиции, слова где эта буква в этой позиции не включаются
+                    for i in range(5):
+                        if i != pos:
+                            # Ключи множеств, где буква находится в не запрещенных местах
+                            exist_out_of_position_inverse.add(f'....{letter}....'[4-i:9-i])
+                        # else:
+                        #     # Ключ множества, где буква находится в запрещенном месте
+                        #     exist_out_of_position.add('.....'[:pos] + letter + '.' * (4 - pos))
+                    if exist_out_of_position:
+                        exist_out_of_position &= set(map(lambda x: x.decode('utf-8'),
+                                                        r.sunion(exist_out_of_position_inverse)))
+                    else:
+                        exist_out_of_position = set(map(lambda x: x.decode('utf-8'),
+                                                        r.sunion(exist_out_of_position_inverse)))
+                    exist_out_of_position_inverse.clear()
             else:
+                # Для букв которые стоят на своих позициях
                 exist_in_position.add('.....'[:pos] + val[0].lower() + '.' * (4 - pos))
     if exist_in_position:
         exist_in_position = set(map(lambda x: x.decode('utf-8'), r.sinter(exist_in_position)))
         all_words &= exist_in_position
     if exist_out_of_position:
-        exist_out_of_position = set(map(lambda x: x.decode('utf-8'), r.sdiff('all', *exist_out_of_position)))
         all_words &= exist_out_of_position
 
 # print(all_words)
@@ -83,6 +98,17 @@ if existing_letters:
 # # ------------------- Время выполнения ----------------------
 #
 # exit()
+
+
+# out_words = sorted(list(all_words))
+# out_words_len = len(all_words)
+# columns = 20
+# if out_words:
+#     for i in range(out_words_len // columns + int(out_words_len % columns > 0)):
+#         print(*out_words[i * columns:i * columns + columns])
+# print(f'\n{out_words_len} слов всего')
+# exit()
+
 
 
 # Разбивка на группы и сортировка перед выводом
