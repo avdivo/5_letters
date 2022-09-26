@@ -14,7 +14,7 @@ black_list = ''
 # Если буквы есть, соварь будет содержать описание известных позиций в слове, позиции обозначаются ключами 0 - 4:
 # Буква в верхнем регистре строки значения обозначает что в этой позиции точно стоит эта буква.
 # В нижнем регистре буквы обозначают что в этой позиции этаи буквы не стоит (но она есть в слове в дргой позиции)
-existing_letters = {0: 'к', 1: 'и', 2: 'Л', 3: '', 4: ''}  # dict()
+existing_letters = {0: 'к', 1: '', 2: 'Л', 3: '', 4: ''}  # dict()
 
 # ---------------------------------------------------------------
 # ------------------- Время выполнения ----------------------
@@ -76,40 +76,16 @@ if existing_letters:
                     if exist_out_of_position:
                         # Для букв которые стоят
                         exist_out_of_position &= set(map(lambda x: x.decode('utf-8'),
-                                                         r.sinter(exist_out_of_position_inverse)))
+                                                         r.sunion(exist_out_of_position_inverse)))
                     else:
                         exist_out_of_position = set(map(lambda x: x.decode('utf-8'),
                                                         r.sunion(exist_out_of_position_inverse)))
                         # print(exist_out_of_position_inverse, len(exist_out_of_position))
-
-----------------------------------------------
-                        # all = set(map(lambda x: x.decode('utf-8'),
-                        #                                  r.sunion('all')))
-                        # d = []
-                        # pattern = re.compile('.кккк')
-                        # for f in all:
-                        #     if f[0]!='к' and (f[1]=='к' or f[2]=='к' or f[3]=='к' or f[4]=='к'):
-                        #         d.append(f)
-                        # print(d, len(d))
-                        all = set(map(lambda x: x.decode('utf-8'),
-                                                         r.sunion('all')))
-                        d = []
-                        for f in all:
-                            if f[2]=='к' and f.count('к') == 1:
-                                d.append(f)
-                        print(d, len(d))
-
-                        all = set(map(lambda x: x.decode('utf-8'),
-                                                         r.sunion('..к..')))
-                        d = []
-                        for f in all:
-                            if f.count('к') == 1:
-                                d.append(f)
-                        print(d, len(d))
-
-                        exit()
--------------------------------------------------
-
+                    # При 2 искомых буквах в слове. Слово будет включно в список, поскольку имеет
+                    # нужную букву там где она не запрещена, однако оно же может иметь букву в позиции
+                    # где она запрещена. Поэтому очистим список от слов имеющих букву в запрещенной позиции
+                    exist_out_of_position -= set(map(lambda x: x.decode('utf-8'),
+                                                        r.sunion('.....'[:pos] + letter + '.' * (4 - pos))))
                     exist_out_of_position_inverse.clear()
             else:
                 # Для букв которые стоят на своих позициях
