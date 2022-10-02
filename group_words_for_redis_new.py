@@ -1,5 +1,4 @@
 # Создание групп слов с различными свойствами для Redis
-# С использованием модуля redis
 
 import re
 import sys, os
@@ -10,7 +9,7 @@ r = redis.Redis(host='localhost', port=6379, db=0)
 if r.exists("all"):
     exit()
 
-# Чтение слов
+# Чтение слов из файла
 input_file = os.path.join(sys.path[0], 'five_letters_singular.txt')  # Файл ввода
 
 with open(input_file, 'r', encoding='utf-8') as f:
