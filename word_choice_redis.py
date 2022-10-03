@@ -17,7 +17,7 @@ white_list = ''
 # Если буквы есть, соварь будет содержать описание известных позиций в слове, позиции обозначаются ключами 0 - 4:
 # Буква в верхнем регистре строки значения обозначает что в этой позиции точно стоит эта буква.
 # В нижнем регистре буквы обозначают что в этой позиции этаи буквы не стоит (но она есть в слове в дргой позиции)
-existing_letters = {0: 'А', 1: 'ш', 2: 'щр', 3: '', 4: ''}
+existing_letters = {0: 'а', 1: 'ш', 2: 'рщ', 3: '', 4: ''}
 
 # ---------------------------------------------------------------
 # ------------------- Время выполнения ----------------------
@@ -72,9 +72,12 @@ if existing_letters:
     exist_in_position = set()
     exist_out_of_position = set()
     exist_out_of_position_inverse = set()
+    filter_work_exist_in_position = False  # Если фильтр работал, то применяем его результаты к списку,
+    filter_work_exist_out_of_position = False  # даже еси результат пустой
     for pos, val in existing_letters.items():
         if val:
             if val.islower():
+                filter_work_exist_out_of_position = True
                 for letter in val:
                     # Добавляем имена групп с данной буквой, кроме того, где она стоит в рассматриваемой
                     # позиции, слова где эта буква в этой позиции не включаются
@@ -102,12 +105,12 @@ if existing_letters:
             else:
                 # Для букв которые стоят на своих позициях
                 exist_in_position.add('.....'[:pos] + val[0].lower() + '.' * (4 - pos))
-    if exist_in_position:
+                filter_work_exist_in_position = True
+    if exist_in_position or filter_work_exist_in_position:
         exist_in_position = set(map(lambda x: x.decode('utf-8'), r.sinter(exist_in_position)))
         all_words &= exist_in_position
-    if exist_out_of_position:
+    if exist_out_of_position or filter_work_exist_out_of_position:
         all_words &= exist_out_of_position
-
 # Разбивка на группы и сортировка перед выводом
 # Слова для вывода разбиваем по группам.
 # Группы формируются по принципу частотности использования групп в 5-буквенных словах
