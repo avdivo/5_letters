@@ -17,7 +17,7 @@ white_list = ''
 # Если буквы есть, соварь будет содержать описание известных позиций в слове, позиции обозначаются ключами 0 - 4:
 # Буква в верхнем регистре строки значения обозначает что в этой позиции точно стоит эта буква.
 # В нижнем регистре буквы обозначают что в этой позиции этаи буквы не стоит (но она есть в слове в дргой позиции)
-existing_letters = {0: 'а', 1: 'ш', 2: 'рщ', 3: '', 4: ''}
+existing_letters = {0: 'ьщ', 1: 'о', 2: '', 3: 'з', 4: ''}
 
 # ---------------------------------------------------------------
 # ------------------- Время выполнения ----------------------
@@ -74,6 +74,7 @@ if existing_letters:
     exist_out_of_position_inverse = set()
     filter_work_exist_in_position = False  # Если фильтр работал, то применяем его результаты к списку,
     filter_work_exist_out_of_position = False  # даже еси результат пустой
+    first = True
     for pos, val in existing_letters.items():
         if val:
             if val.islower():
@@ -88,20 +89,22 @@ if existing_letters:
                         # else:
                         #     # Ключ множества, где буква находится в запрещенном месте
                         #     exist_out_of_position.add('.....'[:pos] + letter + '.' * (4 - pos))
-                    if exist_out_of_position:
-                        # Для букв которые стоят
-                        exist_out_of_position &= set(map(lambda x: x.decode('utf-8'),
-                                                         r.sunion(exist_out_of_position_inverse)))
-                    else:
+                    # print(exist_out_of_position_inverse)
+                    if first:
+                        first = False
                         exist_out_of_position = set(map(lambda x: x.decode('utf-8'),
                                                         r.sunion(exist_out_of_position_inverse)))
-                        # print(exist_out_of_position_inverse, len(exist_out_of_position))
+                    else:
+                        exist_out_of_position &= set(map(lambda x: x.decode('utf-8'),
+                                                         r.sunion(exist_out_of_position_inverse)))
+                    # print(letter, exist_out_of_position_inverse, exist_out_of_position, len(exist_out_of_position))
                     # При 2 искомых буквах в слове. Слово будет включно в список, поскольку имеет
                     # нужную букву там где она не запрещена, однако оно же может иметь букву в позиции
                     # где она запрещена. Поэтому очистим список от слов имеющих букву в запрещенной позиции
                     exist_out_of_position -= set(map(lambda x: x.decode('utf-8'),
-                                                        r.sunion('.....'[:pos] + letter + '.' * (4 - pos))))
+                                                     r.sunion('.....'[:pos] + letter + '.' * (4 - pos))))
                     exist_out_of_position_inverse.clear()
+                    print(letter, exist_out_of_position, len(exist_out_of_position))
             else:
                 # Для букв которые стоят на своих позициях
                 exist_in_position.add('.....'[:pos] + val[0].lower() + '.' * (4 - pos))
